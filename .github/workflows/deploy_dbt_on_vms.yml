@@ -5,37 +5,37 @@ on:
     - cron: '0 */2 * * *'
 
 jobs:
-  # deploy-test:
-  #   runs-on: ubuntu-latest
-  #   env:
-  #     DBT_SCHEMA: ${{ secrets.DBT_SCHEMA }}
-  #     DBT_SERVER_TEST: ${{ secrets.DBT_SERVER_TEST }}
-  #     DBT_PORT_TEST: ${{ secrets.DBT_PORT_TEST }}
-  #     DBT_USER_TEST: ${{ secrets.DBT_USER_TEST }}
-  #     DBT_PASSWORD_TEST: ${{ secrets.DBT_PASSWORD_TEST }}
-  #     DBT_DATABASE_TEST: ${{ secrets.DBT_DATABASE_TEST }}
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
-  #       with:
-  #         ref: dev
+  deploy-test:
+    runs-on: ubuntu-latest
+    env:
+      DBT_SCHEMA: ${{ secrets.DBT_SCHEMA }}
+      DBT_SERVER_TEST: ${{ secrets.DBT_SERVER_TEST }}
+      DBT_PORT_TEST: ${{ secrets.DBT_PORT_TEST }}
+      DBT_USER_TEST: ${{ secrets.DBT_USER_TEST }}
+      DBT_PASSWORD_TEST: ${{ secrets.DBT_PASSWORD_TEST }}
+      DBT_DATABASE_TEST: ${{ secrets.DBT_DATABASE_TEST }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: dev
 
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v5
-  #       with:
-  #         python-version: '3.12'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
-  #     - name: Install dependencies
-  #       run: |
-  #         python -m pip install --upgrade pip
-  #         pip install dbt-postgres
-  #         dbt deps --profiles-dir ./profiles/ --target test
-  #     - name: Run dbt seeds for test
-  #       run: |
-  #         dbt seed --profiles-dir ./profiles/ --target test --full-refresh
-  #     - name: Run dbt models for test
-  #       run: |
-  #         dbt run --profiles-dir ./profiles/ --target test
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install dbt-postgres
+          dbt deps --profiles-dir ./profiles/ --target test
+      - name: Run dbt seeds for test
+        run: |
+          dbt seed --profiles-dir ./profiles/ --target test --full-refresh
+      - name: Run dbt models for test
+        run: |
+          dbt run --profiles-dir ./profiles/ --target test
     
 
   deploy-prod:
