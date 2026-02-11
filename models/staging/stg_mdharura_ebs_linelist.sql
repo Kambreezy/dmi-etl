@@ -1,3 +1,12 @@
+{{ config(
+    materialized='table',
+    post_hook=[
+      'create index if not exists idx_{{ this.identifier }}__id on {{ this }} ("_ID")',
+      'create index if not exists idx_{{ this.identifier }}__createdat on {{ this }} ("CREATEDAT")',
+      'create index if not exists idx_{{ this.identifier }}__unit_code_createdat on {{ this }} ("UNIT_CODE", "CREATEDAT")'
+    ]
+) }}
+
 select
   "_ID", 
   "USER", 

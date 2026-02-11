@@ -1,3 +1,14 @@
+{{
+    config(
+        materialized='table',
+        post_hook= ["create index if not exists idx_{{ this.identifier }}__screening_date on {{ this }} (screening_date)",
+      "create index if not exists idx_{{ this.identifier }}__site_date on {{ this }} (site, screening_date)",
+      "create index if not exists idx_{{ this.identifier }}__unique_id on {{ this }} (\"Unique_ID\")",
+      "create index if not exists idx_{{ this.identifier }}__case on {{ this }} (proposed_combined_case)
+    "])
+}}
+
+
 SELECT "Unique_ID",
   "source",
        pid,
