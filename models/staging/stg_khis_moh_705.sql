@@ -1,3 +1,11 @@
+{{ config(
+    materialized='table',
+    post_hook=[
+      'create index if not exists idx_' ~ this.identifier ~ '__year_month on ' ~ this ~ ' (year, month)',
+      'create index if not exists idx_' ~ this.identifier ~ '__county_year_month on ' ~ this ~ ' (county, year, month)',
+      'create index if not exists idx_' ~ this.identifier ~ '__subcounty_year_month on ' ~ this ~ ' (sub_county, year, month)'
+    ]
+) }}
 select
     "county" as county,
     "Sub County" as sub_county,

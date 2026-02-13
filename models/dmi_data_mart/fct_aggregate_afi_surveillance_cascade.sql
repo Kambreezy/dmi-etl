@@ -1,55 +1,65 @@
+{{ config(
+    materialized='table'
+) }}
 
 with subset_data as (
-select 
-         screening_date,
-		 gender as sex,
-        CASE When  "Unique_ID"  IS NOT NULL then 1 else 0 end as screened,
-		--eligible is when the person is screened and consent not equal to capped (6)
-	    CASE when eligible =1 and consent != 6 THEN 1 else 0 end as eligible,
-		CASE when  consent=1 then 1 else 0 end as enrolled,
-		 --eligble sampling remove the DNS
-		CASE WHEN consent=1 and proposed_combined_case != 'DNS' then 1 else 0 end as eligible_sampling, 
-	    CASE when consent = 1 and sampled = 1 then 1 else 0 end as sampled,
-		CASE WHEN eligible = 1 and consent = 2 then 1 else 0 end as declined_enrollment,
+
+    select
+        screening_date::date as screening_date,
+        gender as sex,
         site::int as mflcode,
-		screeningpoint,
-		high_temp_recorded,
-		calculated_age_days 
-	
-from {{ ref ('stg_afi_surveillance') }}
+        screeningpoint,
+        calculated_age_days,
+
+        /* 0/1 flags (cast to int so sum() is clean) */
+        (case when "Unique_ID" is not null then 1 else 0 end)::int as screened,
+        (case when eligible = 1 and consent <> 6 then 1 else 0 end)::int as eligible,
+        (case when consent = 1 then 1 else 0 end)::int as enrolled,
+        (case when consent = 1 and proposed_combined_case <> 'DNS' then 1 else 0 end)::int as eligible_sampling,
+        (case when consent = 1 and sampled = 1 then 1 else 0 end)::int as sampled,
+        (case when eligible = 1 and consent = 2 then 1 else 0 end)::int as declined_enrollment
+
+    from {{ ref('stg_afi_surveillance') }}
+
 )
 
-SELECT 
-    coalesce(facility.facility_key, 'unset') as facility_key,
-	coalesce(screen_date.date_key, 'unset') as date_key,
-	coalesce(gender.gender_key, 'unset') as gender_key,
-	coalesce(age_group.age_group_key, 'unset') as age_group_key,
-	coalesce(screeningpoint.screeningpoint_key, 'unset') as screeningpoint_key,
-	coalesce(screen_epi_week.epi_week_key, 'unset') as epi_week_key,
-	sum(case when screened = 1 then 1 else 0 end) as screened,
-	sum(case when eligible = 1 then 1 else 0 end) as eligible,
-	sum(case when enrolled = 1 then 1 else 0 end) as enrolled,
-    sum(case when eligible_sampling = 1 then 1 else 0 end) as eligible_sampling,
-    sum(case when sampled = 1 then 1 else 0 end) as sampled,
-    sum(case when declined_enrollment = 1 then 1 else 0 end) as declined_enrollment,
+select
+    coalesce(f.facility_key, 'unset') as facility_key,
+    coalesce(d.date_key, 'unset') as date_key,
+    coalesce(g.gender_key, 'unset') as gender_key,
+    coalesce(ag.age_group_key, 'unset') as age_group_key,
+    coalesce(sp.screeningpoint_key, 'unset') as screeningpoint_key,
+    coalesce(dew.epi_week_key, 'unset') as epi_week_key,
 
-	cast(current_date as date) as load_date
-FROM subset_data
-left join {{ ref( 'dim_facility' ) }} as facility on facility.mfl_code = subset_data.mflcode
-left join {{ ref( 'dim_date') }} as screen_date on screen_date.date = subset_data.screening_date
+    sum(sd.screened) as screened,
+    sum(sd.eligible) as eligible,
+    sum(sd.enrolled) as enrolled,
+    sum(sd.eligible_sampling) as eligible_sampling,
+    sum(sd.sampled) as sampled,
+    sum(sd.declined_enrollment) as declined_enrollment,
 
-left join {{ ref( 'dim_epi_week') }} as screen_epi_week on subset_data.screening_date >= screen_epi_week.start_of_week 
-	and subset_data.screening_date <= screen_epi_week.end_of_week 
-	
-	left join {{ ref('dim_gender') }} as gender on gender.code = subset_data.sex
-left join {{ ref( 'dim_age_group_afi') }} as age_group on subset_data.calculated_age_days >= age_group.start_age_days 
-	and subset_data.calculated_age_days < age_group.end_age_days
-left join {{ ref('dim_afi_screening_point') }} as screeningpoint on screeningpoint.screeningpoint = subset_data.screeningpoint
+    current_date::date as load_date
 
-group by 
- 	coalesce(facility.facility_key, 'unset'),
- 	coalesce(screen_date.date_key, 'unset'),
- 	coalesce(age_group.age_group_key, 'unset'),
- 	coalesce(gender.gender_key, 'unset'),
-	coalesce(screeningpoint.screeningpoint_key, 'unset'),
-	coalesce(screen_epi_week.epi_week_key, 'unset')
+from subset_data sd
+left join {{ ref('dim_facility') }} f
+    on f.mfl_code = sd.mflcode
+left join {{ ref('dim_date') }} d
+    on d.date = sd.screening_date
+left join {{ ref('dim_date_epi_week') }} dew
+    on dew.date = sd.screening_date
+left join {{ ref('dim_gender') }} g
+    on g.code = sd.sex
+left join {{ ref('dim_age_group_afi') }} ag
+    on sd.calculated_age_days >= ag.start_age_days
+   and sd.calculated_age_days <  ag.end_age_days
+left join {{ ref('dim_afi_screening_point') }} sp
+    on sp.screeningpoint = sd.screeningpoint
+
+group by
+    coalesce(f.facility_key, 'unset'),
+    coalesce(d.date_key, 'unset'),
+    coalesce(g.gender_key, 'unset'),
+    coalesce(ag.age_group_key, 'unset'),
+    coalesce(sp.screeningpoint_key, 'unset'),
+    coalesce(dew.epi_week_key, 'unset')
+
