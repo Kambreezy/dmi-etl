@@ -8,7 +8,7 @@ Contains dbt models for transformations for the SHIELD data warehouse.
 3. Make sure you have a PostgreSQL client to interact with your PostgreSQL database e.g PgAdmin, DBeaver, Azure Data Studio etc
 
 ### Steps
-- Clone the repo from GitHub and cd to the root folder
+- Clone the repo from GitHub and cd to the root folder.
 - Create a python virtual environment by running: `python3.8 -m venv <name_of_environemt>` (e.g. `python3.8 -m venv venv`)
 - Activate virtual environment by running: `source venv/Scripts/activate`
 - Once virtual environment is activated install dbt adapter for PostgreSQL by running:
