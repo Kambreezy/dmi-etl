@@ -1,11 +1,7 @@
 
 -- This model creates a date to epi week mapping, which is used in the fact tables to link dates to their corresponding epi weeks.
 {{ config(
-  materialized='table',
-  post_hook=[
-    'create index if not exists idx_' ~ this.identifier ~ '__date on ' ~ this ~ ' (date)',
-    'create index if not exists idx_' ~ this.identifier ~ '__epi_week_key on ' ~ this ~ ' (epi_week_key)'
-  ]
+  materialized='table'
 ) }}
 select
   d.date as date,
