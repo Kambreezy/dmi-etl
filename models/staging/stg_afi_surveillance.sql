@@ -12,16 +12,14 @@
 SELECT "Unique_ID",
   "source",
        pid,
-      {{ parse_mixed_ddmmyyyy('screening_interviewdate', 'date') }} as screening_date,
+       screening_interviewdate::DATE as screening_date,
        ROUND(screeningpoint:: NUMERIC) :: INT as screeningpoint,
-
 CASE
   WHEN eligible::TEXT IN ('0') THEN 0
   WHEN eligible::TEXT IN ('1', 'Yes', 'yes') THEN 1
   WHEN eligible::TEXT IN ('2', 'No', 'no') THEN 2
   ELSE NULL
 END AS eligible,
-    
          ROUND(gender:: numeric)::INT as gender,
 
            {{ parse_consent('consent') }} as consent,
