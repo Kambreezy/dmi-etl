@@ -28,7 +28,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install dbt-postgres
+          pip install --upgrade dbt-postgres psycopg
           dbt deps --profiles-dir ./profiles/ --target test
       - name: Run dbt seeds for test
         run: |
@@ -61,7 +61,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install dbt-postgres
+          pip install --upgrade dbt-postgres psycopg
           dbt deps --profiles-dir ./profiles/ --target prod
       - name: Run dbt seeds for prod
         run: |
